@@ -56,4 +56,22 @@ const getLeagueEntries = async (summonerId) => {
   return entries;
 };
 
-module.exports = { getSummoner, getMatchesIds, getMatchData, getLeagueEntries };
+const getLEbyTierDivision = async (tier, division) => {
+  const entries = await fetch(
+    `${urlTFTEU}/league/v1/entries/${tier}/${division}`,
+    { headers }
+  )
+    .then((res) => res.json())
+    .catch((e) => {
+      console.log("Error processing getLEbyTierDivision");
+    });
+  return entries;
+};
+
+module.exports = {
+  getSummoner,
+  getMatchesIds,
+  getMatchData,
+  getLeagueEntries,
+  getLEbyTierDivision,
+};
