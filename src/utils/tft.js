@@ -22,6 +22,19 @@ const getSummoner = async (name) => {
   return summoner;
 };
 
+const getSummonerByPuuid = async (puuid) => {
+  console.log("getSummonnerbyPuiid");
+  const summoner = await fetch(
+    `${urlTFTEU}/summoner/v1/summoners/by-puuid/${puuid}`,
+    {
+      headers,
+    }
+  ).then((res) => {
+    return res.json();
+  });
+  return summoner;
+};
+
 // TFT-MATCH-V1
 
 const getMatchesIds = async (puuid, count = 20) => {
@@ -52,7 +65,6 @@ const getLeagueEntries = async (summonerId) => {
     .catch((e) => {
       console.log("Error processing getLeagueEntries");
     });
-  console.log(entries);
   return entries;
 };
 
@@ -70,6 +82,7 @@ const getLEbyTierDivision = async (tier, division) => {
 
 module.exports = {
   getSummoner,
+  getSummonerByPuuid,
   getMatchesIds,
   getMatchData,
   getLeagueEntries,

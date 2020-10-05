@@ -17,6 +17,9 @@ const matchSchema = new mongoose.Schema({
       ref: "Summoner",
     },
   ],
+  participants_details: {
+    type: ["Mixed"],
+  },
   info: {
     game_datetime: {
       type: Number,

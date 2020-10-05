@@ -3,6 +3,7 @@ const tft = require("../utils/tft");
 const Match = require("../models/match");
 const LeagueEntry = require("../models/league-entry");
 const { lowerNoSpaces } = require("../utils/helpers");
+const limiter = require("../utils/limiter");
 
 const summonerSchema = new mongoose.Schema(
   {
@@ -47,6 +48,7 @@ summonerSchema.virtual("leagueEntries", {
   foreignField: "summonerId",
 });
 
+// update by Summoner's name
 summonerSchema.statics.update = async (query) => {
   const summonerData = await tft.getSummoner(query);
   if (summonerData.status) {
@@ -60,8 +62,27 @@ summonerSchema.statics.update = async (query) => {
     new: true,
   });
   await Match.update(puuid);
-  await LeagueEntry.update(id);
-  console.log("before return");
+  // await LeagueEntry.update(id);
+  return summoner;
+};
+
+// update by Summoner's id
+summonerSchema.statics.updateById = async (puuid) => {
+  console.log("entering updateById");
+  const summonerData = await tft.getSummonerByPuuid(puuid);
+
+  if (summonerData.status) {
+    return null;
+  }
+  const { name } = summonerData;
+  const db_name = lowerNoSpaces(name);
+  summonerData.db_name = db_name;
+  const summoner = await Summoner.findOneAndUpdate({ db_name }, summonerData, {
+    upsert: true,
+    new: true,
+  });
+  //await Match.update(puuid);
+  // await LeagueEntry.update(id);
   return summoner;
 };
 
@@ -90,7 +111,7 @@ summonerSchema.methods.getProfile = async function () {
     .populate({
       path: "leagueEntries",
       options: {
-        limit: 1,
+        limit: 20,
         sort: {
           updatedAt: -1,
         },
@@ -98,6 +119,23 @@ summonerSchema.methods.getProfile = async function () {
     })
     .execPopulate();
 
+  console.log("participants before");
+
+  let i = 0;
+  for (let match of summoner.matches) {
+    let participants = [];
+    for (let participantId of match.participants) {
+      const player =
+        (await Summoner.findOne({ puuid: participantId })) ||
+        (await Summoner.updateById(participantId));
+      const newParticipant = { participantId, name: player.name };
+      participants.push(newParticipant);
+    }
+    // for getting the name :o, there should be a better solution but it seems I'm currently stuck with db definition of participants
+    summoner.matches[i].participants_details = participants;
+    i++;
+  }
+  //console.log(summoner.matches);
   console.log("Models/getProfile/return");
   return {
     meta: summoner,
@@ -120,5 +158,4 @@ summonerSchema.methods.getLeagueDetails = async function (limit = 20) {
 };
 
 const Summoner = mongoose.model("Summoner", summonerSchema);
-
 module.exports = Summoner;
