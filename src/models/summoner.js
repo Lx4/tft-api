@@ -62,7 +62,7 @@ summonerSchema.statics.update = async (query) => {
     new: true,
   });
   await Match.update(puuid);
-  // await LeagueEntry.update(id);
+  await LeagueEntry.update(id);
   return summoner;
 };
 
